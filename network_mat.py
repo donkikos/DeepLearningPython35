@@ -22,7 +22,8 @@ import numpy as np
 class Network(object):
 
     def __init__(self, sizes):
-        """The list ``sizes`` contains the number of neurons in the
+        """
+        The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
         first layer containing 2 neurons, the second layer 3 neurons,
@@ -31,7 +32,8 @@ class Network(object):
         distribution with mean 0, and variance 1.  Note that the first
         layer is assumed to be an input layer, and by convention we
         won't set any biases for those neurons, since biases are only
-        ever used in computing the outputs from later layers."""
+        ever used in computing the outputs from later layers.
+        """
         self.num_layers = len(sizes)
         self.sizes = sizes
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
@@ -46,14 +48,16 @@ class Network(object):
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
             test_data=None):
-        """Train the neural network using mini-batch stochastic
+        """
+        Train the neural network using mini-batch stochastic
         gradient descent.  The ``training_data`` is a list of tuples
         ``(x, y)`` representing the training inputs and the desired
         outputs.  The other non-optional parameters are
         self-explanatory.  If ``test_data`` is provided then the
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
-        tracking progress, but slows things down substantially."""
+        tracking progress, but slows things down substantially.
+        """
 
         training_data = list(training_data)
         n = len(training_data)
@@ -75,24 +79,39 @@ class Network(object):
                 print("Epoch {} complete".format(j))
 
     def update_mini_batch(self, mini_batch, eta):
-        """Update the network's weights and biases by applying
+        """
+        Update the network's weights and biases by applying
         gradient descent using backpropagation to a single mini batch.
         The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
-        is the learning rate."""
-        mini_batch_size = len(mini_batch)
-        x_len = len(mini_batch[0][0])
-        y_len = len(mini_batch[0][1])
+        is the learning rate.
+        """
+        mini_batch_size = len(mini_batch) # size of mini_batch
+        x_len = len(mini_batch[0][0]) # length of x (axis=0)
+        y_len = len(mini_batch[0][1]) # length of y (axis=0)
 
+        # Creating empty numpy arrays for storing whole batch. 
         X = np.empty((mini_batch_size, x_len, 1), dtype='float32')
         Y = np.empty((mini_batch_size, y_len, 1), dtype='float32')
 
+        # Copying data from mini_batch to X and Y
         for i in range(mini_batch_size):
             X[i] = mini_batch[i][0]
             Y[i] = mini_batch[i][1]
 
+        # Removing last axes from X and Y which are of size 1
+        # and then transposing them to have input vectors as columns of X 
+        # and output activations as columns of Y
         X = np.reshape(X, (mini_batch_size, x_len)).transpose()
         Y = np.reshape(Y, (mini_batch_size, y_len)).transpose()
 
+        # Calling backprop function for the mini_batch.
+        # In network.py backprop receives x and y of shapes
+        # (784, 1) and (10, 1) respectively. Here backprop receives 
+        # X and Y of shapes (784, mini_batch_size) and (10, mini_batch_size) 
+        # respectively. All operations remain valid with this input parameters. 
+        # There is only one difference in returned values - each element of 
+        # nabla_b is not of shape (*, 1), but (*, mini_batch_size). So each
+        # element needs to be summed over axis 1 to get sum over mini_batch.
         nabla_b, nabla_w = self.backprop(X, Y)
         self.weights = [w - (eta / len(mini_batch)) * nw
                         for w, nw in zip(self.weights, nabla_w)]
@@ -100,16 +119,18 @@ class Network(object):
                        for b, nb in zip(self.biases, nabla_b)]
 
     def backprop(self, x, y):
-        """Return a tuple ``(nabla_b, nabla_w)`` representing the
-        gradient for the cost function C_x.  ``nabla_b`` and
-        ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
-        to ``self.biases`` and ``self.weights``."""
+        """
+        Return a tuple ``(nabla_b, nabla_w)`` representing the sum
+        of gradients for the cost function C_x over the mini batch. ``nabla_b`` 
+        and ``nabla_w`` are layer-by-layer lists of numpy arrays of shapes 
+        (*, mini_batch_size).
+        """
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         # feedforward
         activation = x
-        activations = [x] # list to store all the activations, layer by layer
-        zs = [] # list to store all the z vectors, layer by layer
+        activations = [x] # list to store all the activations for mini_batch, layer by layer
+        zs = [] # list to store all the z vectors for mini_batch, layer by layer
         for b, w in zip(self.biases, self.weights):
             z = np.dot(w, activation)+b
             zs.append(z)
@@ -135,17 +156,21 @@ class Network(object):
         return (nabla_b, nabla_w)
 
     def evaluate(self, test_data):
-        """Return the number of test inputs for which the neural
+        """
+        Return the number of test inputs for which the neural
         network outputs the correct result. Note that the neural
         network's output is assumed to be the index of whichever
-        neuron in the final layer has the highest activation."""
+        neuron in the final layer has the highest activation.
+        """
         test_results = [(np.argmax(self.feedforward(x)), y)
                         for (x, y) in test_data]
         return sum(int(x == y) for (x, y) in test_results)
 
     def cost_derivative(self, output_activations, y):
-        """Return the vector of partial derivatives \partial C_x /
-        \partial a for the output activations."""
+        """
+        Return the vector of partial derivatives \partial C_x /
+        \partial a for the output activations.
+        """
         return (output_activations-y)
 
 #### Miscellaneous functions
