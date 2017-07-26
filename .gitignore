@@ -1,7 +1,7 @@
 __pycache__
-.idea/workspace.xml
-.idea/DeepLearningPython35.iml
-.idea/misc.xml
-.idea/modules.xml
-.idea/vcs.xml
-/.vscode/
+.idea/
+.vscode/
+.ipynb_checkpoints/sandbox-checkpoint.ipynb
+test2_stdout.txt
+sandbox.ipynb
+test_my.py
