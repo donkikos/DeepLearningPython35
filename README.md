@@ -4,6 +4,10 @@ The goal of forking from <https://github.com/MichalDanielDobrzanski/DeepLearning
 
 The **test_mat.py** is for comparing the performances of **network.py** and **network_mat.py**.
 
+# Aditional modifications
+## L1 regularization and Momentum-based gradient descent
+Modified network2.py to be able to use L1 regularization (see problem [here](http://neuralnetworksanddeeplearning.com/chap3.html#problems_201277)) and momentum-based stochastic gradient descent (see problem [here](http://neuralnetworksanddeeplearning.com/chap3.html#problem_713937)).
+
 # Content of original README.md
 ## Overview
 
