@@ -63,11 +63,17 @@ class CrossEntropyCost(object):
         """
         return (a-y)
 
+#### Regularization types
+class RegularizationType(object):
+    """Class-enumeration for regularization types"""
+    L2 = 0
+    L1 = 1
 
 #### Main Network class
 class Network(object):
+    """Class for a network."""
 
-    def __init__(self, sizes, cost=CrossEntropyCost):
+    def __init__(self, sizes, cost=CrossEntropyCost, reg=RegularizationType.L2, use_momentum=False):
         """The list ``sizes`` contains the number of neurons in the respective
         layers of the network.  For example, if the list was [2, 3, 1]
         then it would be a three-layer network, with the first layer
@@ -80,8 +86,15 @@ class Network(object):
         """
         self.num_layers = len(sizes)
         self.sizes = sizes
+        self.use_momentum = use_momentum
+        if self.use_momentum:
+            self.velocities = [
+                np.zeros((y, x)) 
+                for x, y in zip(self.sizes[:-1], self.sizes[1:])]
         self.default_weight_initializer()
-        self.cost=cost
+        self.cost = cost
+        self.reg = reg
+
 
     def default_weight_initializer(self):
         """Initialize each weight using a Gaussian distribution with mean 0
@@ -127,13 +140,14 @@ class Network(object):
         return a
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
-            lmbda = 0.0,
+            lmbda=0.0,
+            mu=0.0,
             evaluation_data=None,
             monitor_evaluation_cost=False,
             monitor_evaluation_accuracy=False,
             monitor_training_cost=False,
             monitor_training_accuracy=False,
-            early_stopping_n = 0):
+            early_stopping_n=0):
         """Train the neural network using mini-batch stochastic gradient
         descent.  The ``training_data`` is a list of tuples ``(x, y)``
         representing the training inputs and the desired outputs.  The
@@ -177,7 +191,7 @@ class Network(object):
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(
-                    mini_batch, eta, lmbda, len(training_data))
+                    mini_batch, eta, lmbda, mu, len(training_data))
 
             print("Epoch %s training complete" % j)
 
@@ -214,7 +228,7 @@ class Network(object):
         return evaluation_cost, evaluation_accuracy, \
             training_cost, training_accuracy
 
-    def update_mini_batch(self, mini_batch, eta, lmbda, n):
+    def update_mini_batch(self, mini_batch, eta, lmbda, mu, n):
         """Update the network's weights and biases by applying gradient
         descent using backpropagation to a single mini batch.  The
         ``mini_batch`` is a list of tuples ``(x, y)``, ``eta`` is the
@@ -228,8 +242,44 @@ class Network(object):
             delta_nabla_b, delta_nabla_w = self.backprop(x, y)
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-        self.weights = [(1-eta*(lmbda/n))*w-(eta/len(mini_batch))*nw
-                        for w, nw in zip(self.weights, nabla_w)]
+
+        # If L2 regularization is chosen. L2 is default.
+        # No regularization is achieved by setting lmbda = 0 
+        # and leaving default regularization.
+        if self.reg == RegularizationType.L2:
+            # Use momentum
+            if self.use_momentum:
+                self.velocities = [
+                    mu * v - eta * (lmbda / n) * w - (eta / len(mini_batch)) * nw
+                    for v, w, nw 
+                    in zip(self.velocities, self.weights, nabla_w)]
+                self.weights = [
+                    w + v 
+                    for w, v 
+                    in zip(self.weights, self.velocities)]
+            # Don't use momentum
+            else:
+                self.weights = [
+                    (1 - eta * (lmbda / n)) * w - (eta / len(mini_batch)) * nw
+                    for w, nw in zip(self.weights, nabla_w)]
+        # If L1 regularization is chosen.
+        elif self.reg == RegularizationType.L1:
+            # Use momentum
+            if self.use_momentum:
+                self.velocities = [
+                    mu * v - eta * (lmbda / n) * np.sign(w) - (eta / len(mini_batch)) * nw
+                    for v, w, nw 
+                    in zip(self.velocities, self.weights, nabla_w)]
+                self.weights = [
+                    w + v 
+                    for w, v 
+                    in zip(self.weights, self.velocities)]
+            # Don't use momentum
+            else:
+                self.weights = [
+                    w - eta * (lmbda / n) * np.sign(w) - (eta / len(mini_batch)) * nw
+                    for w, nw in zip(self.weights, nabla_w)]
+
         self.biases = [b-(eta/len(mini_batch))*nb
                        for b, nb in zip(self.biases, nabla_b)]
 
