@@ -1,6 +1,6 @@
 # Why I forked?
 
-The goal of forking from <https://github.com/MichalDanielDobrzanski/DeepLearningPython35> was to do the last exercise in [chapter 2](http://neuralnetworksanddeeplearning.com/chap2.html) of [neuralnetworksanddeeplearning.com](neuralnetworksanddeeplearning.com "Neural Networks and Deep Learning by Michael Nielsen") where the author asks to *"Modify network.py so that it uses this fully matrix-based approach"*. The result is in **network_mat.py**. I changed only the `update_mini_batch` function of original **network.py**.
+The goal of forking from <https://github.com/MichalDanielDobrzanski/DeepLearningPython35> was to do the last exercise in [chapter 2](http://neuralnetworksanddeeplearning.com/chap2.html) of ["Neural Networks and Deep Learning by Michael Nielsen"](neuralnetworksanddeeplearning.com) where the author asks to *"Modify network.py so that it uses this fully matrix-based approach"*. The result is in **network_mat.py**. I changed only the `update_mini_batch` function of original **network.py**.
 
 The **test_mat.py** is for comparing the performances of **network.py** and **network_mat.py**.
 
